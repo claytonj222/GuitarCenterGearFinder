@@ -1,7 +1,7 @@
 ﻿using GuitarCenterGearFinder.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using System.Windows.Forms;
+using System.Net;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 
@@ -15,6 +15,7 @@ namespace GuitarCenterGearFinder.Classes
         public string AlreadySentItemsFilePath { get; set; } 
         public HashSet<double> AlreadySentItems { get; set; } = new HashSet<double>();
         public int TimeoutSeconds { get; set; }
+        public Random RNG { get; set; }
 
         public GuitarCenterDataRetriever(string url, string alreadySentItemsFilePath, int timeoutSeconds)
         {
@@ -25,11 +26,13 @@ namespace GuitarCenterGearFinder.Classes
 
         public void Initialize(string alreadySentItemsFilePath)
         {
+            RNG = new Random();
+
             try
             {
                 new DriverManager().SetUpDriver(new ChromeConfig());
                 ChromeOptions options = new ChromeOptions();
-                options.AddArguments("headless", "log-level=3");
+                options.AddArguments("headless", "log-level=3", "disable-blink-features=AutomationControlled");
                 Driver = new ChromeDriver(options);
             }
             catch (Exception ex)
@@ -90,6 +93,9 @@ namespace GuitarCenterGearFinder.Classes
                 {
                     Tracer.PrintDetailedException(ex);
                 }
+
+                // Sleep for a random amount of time between 3-5 seconds to try and avoid bot detection
+                Thread.Sleep(1000 * RNG.Next(3, 5));
             }
 
             return itemsFound;
