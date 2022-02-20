@@ -5,14 +5,52 @@ namespace GuitarCenterGearFinder.Classes
 {
     public static class WebDriverExtensions
     {
-        public static IWebElement FindElement(this IWebDriver driver, By by, int timeoutInSeconds)
+        public static IWebElement FindElement(this IWebDriver driver, By by, int timeoutInSeconds = 1)
         {
-            if (timeoutInSeconds > 0)
+            IWebElement elementFound = null;
+
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
+
+            try
             {
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
-                return wait.Until(drv => drv.FindElement(by));
+                wait.Until<IWebElement>((d) =>
+                {
+                    try
+                    {
+                        return d.FindElement(by);
+                    }
+                    catch (NoSuchElementException e)
+                    {
+                        return null;
+                    }
+                });
             }
-            return driver.FindElement(by);
+            catch (WebDriverTimeoutException e)
+            {
+                return null;
+            }
+            catch (NullReferenceException e)
+            {
+                return null;
+            }
+
+            elementFound = wait.Until<IWebElement>(d => driver.FindElement(by));
+
+            return elementFound;
+        }
+
+        public static bool DoesElementExist(this IWebDriver driver, By by, int timeoutInSeconds = 0)
+        {
+            //return driver.FindElement(value, timeoutInSeconds) != null ? true : false;
+            try
+            {
+                driver.FindElement(by);
+            }
+            catch (NoSuchElementException e)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

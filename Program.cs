@@ -35,6 +35,8 @@ namespace GuitarCenterGearFinder
 
             }
 
+            Tracer.TryEmptyTraceFile();
+
             Tracer.PrintDetailedTrace(fullName, "Starting up");
             Console.WriteLine("Starting up");
 
