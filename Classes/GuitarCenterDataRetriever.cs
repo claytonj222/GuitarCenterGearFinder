@@ -1,8 +1,7 @@
 ﻿using GuitarCenterGearFinder.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
-using System.Net;
+using System.Diagnostics;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 
@@ -35,7 +34,6 @@ namespace GuitarCenterGearFinder.Classes
                 //options.AddArguments("log-level=3", "disable-blink-features=AutomationControlled");
 
                 Driver = new ChromeDriver(options);
-
             }
             catch (Exception ex)
             {
@@ -53,6 +51,10 @@ namespace GuitarCenterGearFinder.Classes
         public IEnumerable<ListedItem> ListedItemsFound(string searchTerm)
         {
             IList<ListedItem> itemsFound = new List<ListedItem>();
+            Stopwatch stopWatch = new Stopwatch();
+
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var fullName = string.Format("{0}.{1}({2})", method.ReflectedType.FullName, method.Name, string.Join(",", method.GetParameters().Select(o => string.Format("{0} {1}", o.ParameterType, o.Name)).ToArray()));
 
             Driver.Navigate().GoToUrl(StartingUrl);
 
@@ -63,6 +65,8 @@ namespace GuitarCenterGearFinder.Classes
             searchTextBox.SendKeys(Keys.Enter);
 
             List<string> gearUrls = new List<string>();
+
+            stopWatch.Start();
 
             bool hasNextPage = Driver.DoesElementExist(By.CssSelector("[aria-label='Next Page']"), TimeoutSeconds);
 
@@ -116,6 +120,11 @@ namespace GuitarCenterGearFinder.Classes
                     Tracer.PrintDetailedException(ex);
                 }
             }
+
+            stopWatch.Stop();
+            string totalTimeTrace = string.Format("Took {0} seconds to find data for {1} result(s) for search term {2}", stopWatch.Elapsed.TotalSeconds, itemsFound.Count(), searchTerm);
+            Tracer.PrintDetailedTrace(fullName, totalTimeTrace);
+            Console.WriteLine(totalTimeTrace);
 
             return itemsFound;
         }
