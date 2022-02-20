@@ -35,8 +35,6 @@ namespace GuitarCenterGearFinder
 
             }
 
-            Tracer.TryEmptyTraceFile();
-
             Tracer.PrintDetailedTrace(fullName, "Starting up");
             Console.WriteLine("Starting up");
 
@@ -55,6 +53,8 @@ namespace GuitarCenterGearFinder
 
             while (true)
             {
+                Tracer.TryEmptyTraceFile();
+
                 GuitarCenterDataRetriever retriever = new GuitarCenterDataRetriever(ConfigurationManager.AppSettings.Get("WebsiteUrl"), filePath, timeoutSeconds);
 
                 List<ListedItem> itemsFound = new List<ListedItem>();
