@@ -27,11 +27,11 @@ namespace GuitarCenterGearFinder.Classes
         {
             try
             {
-                new DriverManager().SetUpDriver(new ChromeConfig());
+                var stuff = new DriverManager().SetUpDriver(new ChromeConfig());
                 ChromeOptions options = new ChromeOptions();
                 options.AddArguments("headless", "log-level=3", "disable-blink-features=AutomationControlled", "window-size=1920x1080");
                 // uncomment to view web browser during debugging
-                //options.AddArguments("log-level=3", "disable-blink-features=AutomationControlled");
+               // options.AddArguments("log-level=3", "disable-blink-features=AutomationControlled");
 
                 Driver = new ChromeDriver(options);
             }
@@ -108,12 +108,15 @@ namespace GuitarCenterGearFinder.Classes
                 {
                     Driver.Navigate().GoToUrl(url);
 
-                    double itemNumber = Convert.ToDouble(Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[1]/div[3]/span[1]/span"), TimeoutSeconds)?.Text);
-                    string itemName = Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[1]/div[2]/h1"), TimeoutSeconds)?.Text;
-                    string condition = Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[3]/div[1]/span/span"), TimeoutSeconds)?.Text;
-                    decimal price = decimal.Parse(Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[3]/div[2]/div/span"), TimeoutSeconds)?.Text, System.Globalization.NumberStyles.Currency);
+                    if (Driver.FindElement(By.ClassName("sitemap-hero"), 1) == null)
+                    {
+                        double itemNumber = Convert.ToDouble(Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[1]/div[3]/span[1]/span"), TimeoutSeconds)?.Text);
+                        string itemName = Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[1]/div[2]/h1"), TimeoutSeconds)?.Text;
+                        string condition = Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[3]/div[1]/span/span"), TimeoutSeconds)?.Text;
+                        decimal price = decimal.Parse(Driver.FindElement(By.XPath("//*[@id=\"PDPRightRailWrapper\"]/div[3]/div[2]/div/span"), TimeoutSeconds)?.Text, System.Globalization.NumberStyles.Currency);
 
-                    itemsFound.Add(new ListedItem(itemNumber, itemName, condition, price, url));
+                        itemsFound.Add(new ListedItem(itemNumber, itemName, condition, price, url));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -131,7 +134,7 @@ namespace GuitarCenterGearFinder.Classes
 
         private IList<string> GetUrlsOnCurrentPage()
         {
-            var elements = Driver.FindElements(By.ClassName("productTitle"));
+            var elements = Driver.FindElements(By.ClassName("product-container"));
 
             // get all urls
             if (elements != null && elements.Any())
