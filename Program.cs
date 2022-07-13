@@ -22,7 +22,7 @@ namespace GuitarCenterGearFinder
             int sleepTimeMinutes = 60;
             int.TryParse(ConfigurationManager.AppSettings.Get("ProgramSleepTimeMinutes"), out sleepTimeMinutes);
 
-            Tracer.FilePath = "/Application.Log";
+            Tracer.FilePath = "application.log";
 
             if (bool.TryParse(ConfigurationManager.AppSettings.Get("DoLog"), out bool doLog))
             {
@@ -49,43 +49,57 @@ namespace GuitarCenterGearFinder
             }
 
             INotificationHandler sender = new EmailNotificationHandler(filePath, ConfigurationManager.AppSettings.Get("AlertEmailSender"), password, port, ConfigurationManager.AppSettings["AlertEmailSenderSmptHost"]);
+            IErrorHandler emailErrorHandler = new EmailErrorHandler(ConfigurationManager.AppSettings.Get("AlertEmailSender"), password, port, ConfigurationManager.AppSettings["AlertEmailSenderSmptHost"]);
             password.Dispose();
 
             while (true)
             {
-                Tracer.TryEmptyTraceFile();
-
-                GuitarCenterDataRetriever retriever = new GuitarCenterDataRetriever(ConfigurationManager.AppSettings.Get("WebsiteUrl"), filePath, timeoutSeconds);
-
-                List<ListedItem> itemsFound = new List<ListedItem>();
-
-                foreach (var searchTerm in searchTerms)
+                try
                 {
-                    itemsFound.AddRange(retriever.GetNewListedItems(searchTerm));
+                    int a = 0;
+                    int x = 1 / a;
+                    Tracer.TryEmptyTraceFile();
+
+                    GuitarCenterDataRetriever retriever = new GuitarCenterDataRetriever(ConfigurationManager.AppSettings.Get("WebsiteUrl"), filePath, timeoutSeconds);
+
+                    List<ListedItem> itemsFound = new List<ListedItem>();
+
+                    foreach (var searchTerm in searchTerms)
+                    {
+                        itemsFound.AddRange(retriever.GetNewListedItems(searchTerm));
+                    }
+
+                    Tracer.PrintDetailedTrace(fullName, string.Format("{0} new items found to notify user", itemsFound.Count()));
+                    Console.WriteLine(string.Format("{0} new item(s) found to notify user", itemsFound.Count()));
+
+
+                    foreach (var item in itemsFound)
+                    {
+                        var result = sender.PrepareData(item);
+                        sender.SendMessage(result, ConfigurationManager.AppSettings["AlertEmailDestination"], item);
+                    }
+
+                    if (itemsFound.Count > 0)
+                    {
+                        Tracer.PrintDetailedTrace(fullName, string.Format("Notifications to user sent"));
+                        Console.WriteLine("Notifications to user sent");
+                    }
+
+                    retriever.Dispose();
+
+                    Console.WriteLine(string.Format("Sleeping for {0} minute(s)", sleepTimeMinutes));
+                    Tracer.PrintDetailedTrace(fullName, string.Format("Sleeping for {0} minute(s)", sleepTimeMinutes));
+
+                    Thread.Sleep(new TimeSpan(0, sleepTimeMinutes, 0));
+                }
+                catch (Exception ex)
+                {
+                    Tracer.PrintDetailedException(ex);
+                    emailErrorHandler.SendError(ex, ConfigurationManager.AppSettings["ErrorEmailDestination"]);
                 }
 
-                Tracer.PrintDetailedTrace(fullName, string.Format("{0} new items found to notify user", itemsFound.Count()));
-                Console.WriteLine(string.Format("{0} new items found to notify user", itemsFound.Count()));
-
-
-                foreach (var item in itemsFound)
-                {
-                    var result = sender.PrepareData(item);
-                    sender.SendMessage(result, ConfigurationManager.AppSettings["AlertEmailDestination"], item);
-                }
-
-                if (itemsFound.Count > 0)
-                {
-                    Tracer.PrintDetailedTrace(fullName, string.Format("Notifications to user sent"));
-                    Console.WriteLine("Notifications to user sent");
-                }
-
-                retriever.Dispose();
-
-                Console.WriteLine(string.Format("Sleeping for {0} minute(s)", sleepTimeMinutes));
-                Tracer.PrintDetailedTrace(fullName, string.Format("Sleeping for {0} minute(s)", sleepTimeMinutes));
-
-                Thread.Sleep(new TimeSpan(0, sleepTimeMinutes, 0));
+                Console.Clear();
+                
             }
         }
     }

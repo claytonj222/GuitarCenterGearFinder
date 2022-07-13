@@ -39,17 +39,19 @@ namespace GuitarCenterGearFinder.Classes
         {
             if (DoLog)
             {
-                DateTime dateTime = DateTime.Now;
-
-                Trace.WriteLine(string.Format("{0}: - {1}: {2}", dateTime, callingMethod, output));
+                Trace.WriteLine(string.Format("{0}: - {1}: {2}", DateTime.Now, callingMethod, output));
             }
         }
 
         public static void PrintDetailedException(Exception ex)
         {
-            DateTime dateTime = DateTime.Now;
+            Trace.WriteLine(GetDetailedException(ex));
+        }
 
-            Trace.WriteLine(string.Format("{0}: - {1}", dateTime, ex.ToString()));
+        public static string GetDetailedException(Exception ex)
+        {
+            return string.Format("{0}: - {1}", DateTime.Now, ex.ToString());
+
         }
     }
 }
